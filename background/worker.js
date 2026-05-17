@@ -1,4 +1,4 @@
-console.log("[MindGuard] background worker aktif");
+console.log("[NexGuard] background worker aktif");
 
 const scoreCache = new Map(); // postId → {score, action, reason}
 
@@ -38,7 +38,7 @@ function interceptResponse(details) {
         // Zaten cache'de olanları filtrele
         const newPosts = posts.filter(p => p.id && !scoreCache.has(p.id));
         if (newPosts.length > 0) {
-          console.log(`[MindGuard] ${newPosts.length} yeni post bulundu (toplam: ${posts.length})`);
+          console.log(`[NexGuard] ${newPosts.length} yeni post bulundu (toplam: ${posts.length})`);
           analyzeBatch(newPosts);
         }
       }
@@ -154,8 +154,8 @@ async function processBatch(posts) {
   if (posts.length === 0) return;
 
   // API key kontrolü
-  if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY === "BURAYA_API_KEY_GIR") {
-    console.warn("[MindGuard] Gemini API key ayarlanmamış!");
+  if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY === "{{GEMINI_API_KEY}}") {
+    console.warn("[NexGuard] Gemini API key ayarlanmamış!");
     return;
   }
 
@@ -168,7 +168,7 @@ async function processBatch(posts) {
     if (data.userProfile) userProfile = data.userProfile;
     if (data.filters) activeFilters = data.filters;
   } catch (e) {
-    console.warn("[MindGuard] Tercihler yüklenirken hata:", e);
+    console.warn("[NexGuard] Tercihler yüklenirken hata:", e);
   }
 
   const topicDescriptions = {
@@ -188,7 +188,7 @@ async function processBatch(posts) {
 
   // Eğer hiçbir filtre aktif edilmemişse direkt pass geç
   if (selectedTopics.length === 0) {
-    console.log("[MindGuard] Aktif filtre bulunmadığından analiz yapılmadı.");
+    console.log("[NexGuard] Aktif filtre bulunmadığından analiz yapılmadı.");
     for (const post of posts) {
       scoreCache.set(post.id, { score: 100, action: "pass", reason: "" });
     }
@@ -199,7 +199,7 @@ async function processBatch(posts) {
   // Content script'e "analiz başladı" mesajı gönder
   notifyTabs({ type: "ANALYSIS_STATUS", status: "start", count: posts.length });
 
-  console.log(`[MindGuard] ${posts.length} post tek istekte analiz ediliyor...`);
+  console.log(`[NexGuard] ${posts.length} post tek istekte analiz ediliyor...`);
 
   // Batch prompt oluştur
   const postLines = posts.map((p, i) =>
@@ -245,18 +245,18 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
     if (!res.ok) {
       const errText = await res.text();
       if (res.status === 429) {
-        console.warn("[MindGuard] Rate limit! 60 saniye bekleniyor...");
+        console.warn("[NexGuard] Rate limit! 60 saniye bekleniyor...");
         await new Promise(r => setTimeout(r, 60000));
         return processBatch(posts); // Tekrar dene
       }
-      console.error("[MindGuard] Gemini HTTP hatası:", res.status, errText.slice(0, 200));
+      console.error("[NexGuard] Gemini HTTP hatası:", res.status, errText.slice(0, 200));
       notifyTabs({ type: "ANALYSIS_STATUS", status: "done" });
       return;
     }
 
     const data = await res.json();
     const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    console.log("[MindGuard] Gemini raw cevap:", raw.slice(0, 300));
+    console.log("[NexGuard] Gemini raw cevap:", raw.slice(0, 300));
 
     // Markdown kod bloklarını temizle
     let cleanRaw = raw.replace(/```json/gi, "").replace(/```/gi, "").trim();
@@ -266,7 +266,7 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
     const endIdx = cleanRaw.lastIndexOf(']');
 
     if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
-      console.warn("[MindGuard] JSON array bulunamadı");
+      console.warn("[NexGuard] JSON array bulunamadı");
       notifyTabs({ type: "ANALYSIS_STATUS", status: "done" });
       return;
     }
@@ -276,7 +276,7 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
     try {
       results = JSON.parse(jsonStr);
     } catch (e) {
-      console.warn("[MindGuard] JSON Parse Hatası:", e.message, "\\nRaw str:", jsonStr.slice(0, 100));
+      console.warn("[NexGuard] JSON Parse Hatası:", e.message, "\\nRaw str:", jsonStr.slice(0, 100));
       notifyTabs({ type: "ANALYSIS_STATUS", status: "done" });
       return;
     }
@@ -297,7 +297,7 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
       scoreCache.set(post.id, result);
 
       const emoji = r.action === "blur" ? "🔴" : r.action === "warn" ? "🟡" : "🟢";
-      console.log(`[MindGuard] ${emoji} @${post.author} | skor:${r.score} | aksiyon:${r.action} | sebep:"${r.reason}"`);
+      console.log(`[NexGuard] ${emoji} @${post.author} | skor:${r.score} | aksiyon:${r.action} | sebep:"${r.reason}"`);
 
       // Blur/warn ise content script'e bildir
       if (r.action !== "pass") {
@@ -311,10 +311,10 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
       }
     }
 
-    console.log(`[MindGuard] Batch analiz tamamlandı: ${results.length}/${posts.length} sonuç`);
+    console.log(`[NexGuard] Batch analiz tamamlandı: ${results.length}/${posts.length} sonuç`);
 
   } catch (err) {
-    console.error("[MindGuard] Gemini hatası:", err);
+    console.error("[NexGuard] Gemini hatası:", err);
   }
 
   // Content script'e "analiz bitti" mesajı
@@ -325,9 +325,9 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
 async function notifyTabs(msg) {
   try {
     const tabs = await browser.tabs.query({ url: "*://*.instagram.com/*" });
-    console.log(`[MindGuard] Mesaj gönderilecek ${tabs.length} sekme bulundu.`, msg.type);
+    console.log(`[NexGuard] Mesaj gönderilecek ${tabs.length} sekme bulundu.`, msg.type);
     for (const tab of tabs) {
-      browser.tabs.sendMessage(tab.id, msg).catch((e) => console.warn("[MindGuard] Sekme mesaj hatası:", e));
+      browser.tabs.sendMessage(tab.id, msg).catch((e) => console.warn("[NexGuard] Sekme mesaj hatası:", e));
     }
     // Eğer bulamazsa (Reels vs), aktif sekmeye atmayı dene
     if (tabs.length === 0) {
@@ -337,7 +337,7 @@ async function notifyTabs(msg) {
       }
     }
   } catch (e) {
-    console.error("[MindGuard] notifyTabs hatası:", e);
+    console.error("[NexGuard] notifyTabs hatası:", e);
   }
 }
 
@@ -348,4 +348,4 @@ browser.webRequest.onBeforeRequest.addListener(
   ["blocking"]
 );
 
-console.log("[MindGuard] webRequest listener kayıtlı, Instagram istekleri dinleniyor...");
+console.log("[NexGuard] webRequest listener kayıtlı, Instagram istekleri dinleniyor...");

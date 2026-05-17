@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "MindGuard",
+  "name": "NexGuard",
   "version": "1.0",
   "description": "Instagram reels ve gönderilerini senin için filtreler",
   "icons": { "48": "assets/icon-48.png" },

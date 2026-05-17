@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
           currentFilters[key] = switches[key].checked;
           
           storage.set({ filters: currentFilters }, () => {
-            console.log(`[MindGuard] Filtre güncellendi: ${key} = ${switches[key].checked}`);
+            console.log(`[NexGuard] Filtre güncellendi: ${key} = ${switches[key].checked}`);
           });
         });
       });

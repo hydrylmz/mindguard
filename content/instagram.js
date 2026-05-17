@@ -1,4 +1,4 @@
-console.log("[MindGuard] Instagram content script yüklendi");
+console.log("[NexGuard] Instagram content script yüklendi");
 
 // ─── Analiz Overlay (Tam Ekran CSP Uyumlu) ───
 
@@ -6,13 +6,13 @@ let overlay = null;
 
 function showAnalysisOverlay(count) {
   if (overlay) {
-    const textSpan = document.getElementById("mg-overlay-text");
-    if (textSpan) textSpan.innerHTML = `🛡️ MindGuard: <strong>${count}</strong> içerik analiz ediliyor...`;
+    const textSpan = document.getElementById("nx-overlay-text");
+    if (textSpan) textSpan.innerHTML = `🛡️ NexGuard: <strong>${count}</strong> içerik analiz ediliyor...`;
     return;
   }
 
   overlay = document.createElement("div");
-  overlay.id = "mindguard-overlay";
+  overlay.id = "nexguard-overlay";
   
   // Tam ekran CSP uyumlu ayarlar
   Object.assign(overlay.style, {
@@ -69,8 +69,8 @@ function showAnalysisOverlay(count) {
   iconContainer.appendChild(iconImg);
 
   const text = document.createElement("span");
-  text.id = "mg-overlay-text";
-  text.innerHTML = `🛡️ MindGuard: <strong>${count}</strong> içerik analiz ediliyor...`;
+  text.id = "nx-overlay-text";
+  text.innerHTML = `🛡️ NexGuard: <strong>${count}</strong> içerik analiz ediliyor...`;
   Object.assign(text.style, {
     fontWeight: "500",
     letterSpacing: "0.5px",
@@ -133,7 +133,7 @@ function scanFeedDOM() {
       article.dataset.shortcode = shortcode;
       processedArticles.add(article);
       
-      console.log(`[MindGuard] Gönderi DOM'da algılandı: shortcode=${shortcode}`);
+      console.log(`[NexGuard] Gönderi DOM'da algılandı: shortcode=${shortcode}`);
       
       // Zaten verilmiş bir karar var mı kontrol et
       if (decisions.has(shortcode)) {
@@ -145,7 +145,7 @@ function scanFeedDOM() {
 
 // Kararı Gönderiye Uygula
 function applyDecisionToArticle(article, decision) {
-  if (article.dataset.mindguardFiltered === "true") return;
+  if (article.dataset.nexguardFiltered === "true") return;
   
   if (decision.action === "blur") {
     applyBlurOverlay(article, decision.reason);
@@ -153,14 +153,14 @@ function applyDecisionToArticle(article, decision) {
     applyWarningBanner(article, decision.reason);
   }
   
-  article.dataset.mindguardFiltered = "true";
+  article.dataset.nexguardFiltered = "true";
 }
 
 // ─── 🔴 BLUR PERDESİ (Overlay) UYGULA ───
 function applyBlurOverlay(article, reason) {
   const mediaContainer = findMediaContainer(article);
   if (!mediaContainer) {
-    console.warn("[MindGuard] Medya container bulunamadı, blur uygulanamadı.");
+    console.warn("[NexGuard] Medya container bulunamadı, blur uygulanamadı.");
     return;
   }
 
@@ -175,7 +175,7 @@ function applyBlurOverlay(article, reason) {
   }
 
   const overlay = document.createElement("div");
-  overlay.className = "mindguard-blur-overlay";
+  overlay.className = "nexguard-blur-overlay";
   
   // CSP Uyumlu ve padding-bottom aspect ratio bug'ını (0px height) çözen stil (top:0/bottom:0)
   Object.assign(overlay.style, {
@@ -206,7 +206,7 @@ function applyBlurOverlay(article, reason) {
   icon.style.marginBottom = "12px";
 
   const title = document.createElement("div");
-  title.innerHTML = "<strong>MindGuard Perdesi</strong>";
+  title.innerHTML = "<strong>NexGuard Perdesi</strong>";
   title.style.fontSize = "16px";
   title.style.marginBottom = "8px";
 
@@ -249,13 +249,15 @@ function applyBlurOverlay(article, reason) {
   overlay.appendChild(button);
   
   mediaContainer.appendChild(overlay);
-  console.log("[MindGuard] 🔴 Blur perdesi DOM'a eklendi ve görsel buzlandı.");
+  console.log("[NexGuard] 🔴 Blur perdesi DOM'a eklendi ve görsel buzlandı.");
+  
+  maybeShowCatMascot(article, "blur");
 }
 
 // ─── 🟡 UYARI BANDI (Warning Banner) UYGULA ───
 function applyWarningBanner(article, reason) {
   const banner = document.createElement("div");
-  banner.className = "mindguard-warning-banner";
+  banner.className = "nexguard-warning-banner";
   
   Object.assign(banner.style, {
     background: "rgba(245, 158, 11, 0.95)", // Şık Sarı/Turuncu
@@ -272,7 +274,7 @@ function applyWarningBanner(article, reason) {
     borderBottom: "1px solid rgba(0,0,0,0.1)"
   });
 
-  banner.innerHTML = `⚠️ <span style="flex-grow: 1;">MindGuard Hassas İçerik Uyarısı: <strong>${reason}</strong> olabilir.</span>`;
+  banner.innerHTML = `⚠️ <span style="flex-grow: 1;">NexGuard Hassas İçerik Uyarısı: <strong>${reason}</strong> olabilir.</span>`;
   
   // Gönderinin en üstüne yerleştir (Header altına)
   const header = article.querySelector("header") || article.firstChild;
@@ -281,7 +283,126 @@ function applyWarningBanner(article, reason) {
   } else {
     article.insertBefore(banner, article.firstChild);
   }
-  console.log("[MindGuard] 🟡 Uyarı bandı DOM'a eklendi.");
+  console.log("[NexGuard] 🟡 Uyarı bandı DOM'a eklendi.");
+  
+  maybeShowCatMascot(article, "warn");
+}
+
+// ─── 🐱 KEDİ MASKOTU (NexGuard) ───
+function maybeShowCatMascot(article, type) {
+  // %50 ihtimalle çıksın (MVP için)
+  if (Math.random() > 0.5) return; 
+
+  const mediaContainer = findMediaContainer(article);
+  if (!mediaContainer) return;
+  
+  // Eğer bu gönderide zaten maskot varsa çıkma
+  if (mediaContainer.querySelector(".nexguard-mascot-container")) return;
+
+  mediaContainer.style.position = "relative";
+
+  const mascotContainer = document.createElement("div");
+  mascotContainer.className = "nexguard-mascot-container";
+  Object.assign(mascotContainer.style, {
+    position: "absolute",
+    bottom: "20px",
+    right: "20px",
+    display: "flex",
+    alignItems: "flex-end",
+    gap: "10px",
+    zIndex: "9999",
+    pointerEvents: "none"
+  });
+
+  // Baloncuk
+  const bubble = document.createElement("div");
+  Object.assign(bubble.style, {
+    background: "#ffffff",
+    color: "#0f172a",
+    padding: "12px 16px",
+    borderRadius: "16px 16px 0 16px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+    fontSize: "13px",
+    fontWeight: "600",
+    fontFamily: "-apple-system, sans-serif",
+    maxWidth: "200px",
+    opacity: "0",
+    transform: "translateY(20px)",
+    transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+    pointerEvents: "auto",
+    lineHeight: "1.4"
+  });
+
+  // Kedi resmi
+  const catImg = document.createElement("img");
+  catImg.src = chrome.runtime.getURL("assets/icon-48.png");
+  Object.assign(catImg.style, {
+    width: "50px",
+    height: "50px",
+    borderRadius: "50%",
+    border: "3px solid #6366f1",
+    boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+    opacity: "0",
+    transform: "scale(0.5)",
+    transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s"
+  });
+
+  mascotContainer.appendChild(bubble);
+  mascotContainer.appendChild(catImg);
+  mediaContainer.appendChild(mascotContainer);
+
+  // İçerik ayarla
+  if (type === "blur") {
+    bubble.innerHTML = "Tercihlerine bağlı olarak bu videoyu kapattık, açmak istersen açabilirsin ama dikkatli ol! <br><br><em>meow~~</em> 🐾";
+  } else if (type === "warn") {
+    bubble.innerHTML = `
+      <div style="margin-bottom: 8px;">Bu video seni nasıl hissettirdi?</div>
+      <div style="display: flex; gap: 8px; justify-content: center; font-size: 20px;" class="cat-emojis">
+        <span style="cursor: pointer; transition: transform 0.2s;" class="c-emoji" title="Çok kötü">😡</span>
+        <span style="cursor: pointer; transition: transform 0.2s;" class="c-emoji" title="Kötü">😟</span>
+        <span style="cursor: pointer; transition: transform 0.2s;" class="c-emoji" title="Nötr">😐</span>
+        <span style="cursor: pointer; transition: transform 0.2s;" class="c-emoji" title="İyi">😊</span>
+      </div>
+    `;
+
+    // Emoji tıklama olayları
+    setTimeout(() => {
+      const emojis = bubble.querySelectorAll(".c-emoji");
+      emojis.forEach(emp => {
+        emp.addEventListener("mouseover", () => emp.style.transform = "scale(1.2)");
+        emp.addEventListener("mouseout", () => emp.style.transform = "scale(1)");
+        emp.addEventListener("click", () => {
+          bubble.innerHTML = "<div style='text-align:center; color:#10b981; font-size: 14px;'>Geri bildirimin algoritmana eklendi! 🐾</div>";
+          setTimeout(() => removeMascot(), 3000);
+        });
+      });
+    }, 100);
+  }
+
+  // Çıkış animasyonu (Request animation frame to allow DOM attach)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      bubble.style.opacity = "1";
+      bubble.style.transform = "translateY(0)";
+      catImg.style.opacity = "1";
+      catImg.style.transform = "scale(1)";
+    });
+  });
+
+  function removeMascot() {
+    bubble.style.opacity = "0";
+    bubble.style.transform = "translateY(20px)";
+    catImg.style.opacity = "0";
+    catImg.style.transform = "scale(0.5)";
+    setTimeout(() => mascotContainer.remove(), 400);
+  }
+
+  // Otomatik kaybolma
+  if (type === "blur") {
+    setTimeout(removeMascot, 6000);
+  } else {
+    setTimeout(removeMascot, 12000);
+  }
 }
 
 // Kapsayıcı Medya Elementini (Fotoğraf/Video wrapper) Seç
@@ -326,7 +447,7 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 
   if (msg.type === "POST_DECISION") {
-    console.log(`[MindGuard] Karar alındı: shortcode=${msg.postId} aksiyon=${msg.action} sebep="${msg.reason}"`);
+    console.log(`[NexGuard] Karar alındı: shortcode=${msg.postId} aksiyon=${msg.action} sebep="${msg.reason}"`);
     
     // Kararı cache'le
     decisions.set(msg.postId, { action: msg.action, reason: msg.reason, score: msg.score });
@@ -349,4 +470,3 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 // İlk açılışta tara
 setTimeout(scanFeedDOM, 2000);
-

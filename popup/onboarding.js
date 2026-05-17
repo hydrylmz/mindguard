@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         filters: userData.filters
       }, () => {
-        console.log("[MindGuard] Onboarding verileri başarıyla kaydedildi.");
+        console.log("[NexGuard] Onboarding verileri başarıyla kaydedildi.");
         resolve();
       });
     });
