@@ -4,6 +4,16 @@ console.log("[NexGuard] Instagram content script yüklendi");
 
 let overlay = null;
 
+function playMeowSound() {
+    try {
+        const audio = new Audio(chrome.runtime.getURL("assets/meow.mp3"));
+        audio.volume = 0.6;
+        audio.play().catch(e => console.warn("[NexGuard] Audio play engellendi:", e));
+    } catch (e) {
+        console.warn("[NexGuard] Ses çalınamadı:", e);
+    }
+}
+
 const preventScroll = (e) => {
     e.preventDefault();
 };
@@ -101,6 +111,8 @@ function showAnalysisOverlay(count) {
         duration: 400,
         easing: "ease-out"
     });
+    
+    playMeowSound();
 }
 
 function hideAnalysisOverlay() {
@@ -110,6 +122,7 @@ function hideAnalysisOverlay() {
     window.removeEventListener('keydown', preventKeys);
 
     if (!overlay) return;
+    playMeowSound();
     const anim = overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 400,
         easing: "ease-in"
@@ -501,11 +514,7 @@ function maybeShowCatMascot(article, type) {
             catImg.style.transform = "scale(1)";
             
             // Kedi sesi çal 🐾
-            try {
-                const audio = new Audio(chrome.runtime.getURL("assets/meow.mp3"));
-                audio.volume = 0.5;
-                audio.play().catch(() => {}); // Eğer browser otomatik sesi engellerse hata vermesin
-            } catch (e) {}
+            playMeowSound();
         });
     });
 
