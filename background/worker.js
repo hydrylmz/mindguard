@@ -1,6 +1,7 @@
 console.log("[NexGuard] background worker aktif");
 
 const scoreCache = new Map(); // postId → {score, action, reason}
+const knownNetworkPosts = new Set(); // Ağdan (JSON) gelen postlar
 
 // Instagram endpoint pattern'leri
 const IG_URLS = [
@@ -39,6 +40,7 @@ function interceptResponse(details) {
         const newPosts = posts.filter(p => p.id && !scoreCache.has(p.id));
         if (newPosts.length > 0) {
           console.log(`[NexGuard] ${newPosts.length} yeni post bulundu (toplam: ${posts.length})`);
+          newPosts.forEach(p => knownNetworkPosts.add(p.id));
           analyzeBatch(newPosts);
         }
       }
@@ -369,7 +371,7 @@ console.log("[NexGuard] webRequest listener kayıtlı, Instagram istekleri dinle
 const pendingBackgroundRequests = new Set();
 browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "ANALYZE_DOM_POST") {
-    if (msg.post && msg.post.id && !scoreCache.has(msg.post.id) && !pendingBackgroundRequests.has(msg.post.id)) {
+    if (msg.post && msg.post.id && !scoreCache.has(msg.post.id) && !pendingBackgroundRequests.has(msg.post.id) && !knownNetworkPosts.has(msg.post.id)) {
       pendingBackgroundRequests.add(msg.post.id);
       console.log(`[NexGuard] İlk açılış DOM postu yakalandı: ${msg.post.id}`);
       analyzeBatch([msg.post]);

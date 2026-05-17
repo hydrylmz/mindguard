@@ -238,6 +238,8 @@ function applyDecisionToArticle(article, decision) {
         applyBlurOverlay(article, decision.reason);
     } else if (decision.action === "warn") {
         applyWarningBanner(article, decision.reason);
+    } else if (decision.score > 90) {
+        maybeShowCatMascot(article, "positive");
     }
 
     article.dataset.nexguardFiltered = "true";
@@ -447,11 +449,12 @@ function maybeShowCatMascot(article, type) {
     // Kedi resmi
     const catImg = document.createElement("img");
     catImg.src = chrome.runtime.getURL("assets/icon-48.png");
+    const catBorderColor = type === "positive" ? "#10b981" : "#6366f1";
     Object.assign(catImg.style, {
         width: "50px",
         height: "50px",
         borderRadius: "50%",
-        border: "3px solid #6366f1",
+        border: `3px solid ${catBorderColor}`,
         boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
         opacity: "0",
         transform: "scale(0.5)",
@@ -469,6 +472,8 @@ function maybeShowCatMascot(article, type) {
         bubble.innerHTML = closeBtnHtml + "Tercihlerine bağlı olarak bu videoyu kapattık, açmak istersen açabilirsin ama dikkatli ol! <br><br><em>meow~~</em> 🐾";
     } else if (type === "doomscroll") {
         bubble.innerHTML = closeBtnHtml + "Çok fazla aşağı kaydırdın, biraz durup su içmeye veya nefes almaya ne dersin? <br><br><em>meow~~</em> 🐾💧";
+    } else if (type === "positive") {
+        bubble.innerHTML = closeBtnHtml + "Bu gönderi ruhuna çok iyi gelecek! <br><br>😻💖";
     } else if (type === "warn") {
         bubble.innerHTML = closeBtnHtml + `
       <div style="margin-bottom: 8px;">Bu içerik seni nasıl hissettirdi?</div>
