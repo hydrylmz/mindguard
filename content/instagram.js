@@ -127,6 +127,7 @@ function hideAnalysisOverlay() {
 
 const decisions = new Map(); // shortcode -> {action, reason, score}
 const processedArticles = new Set();
+const pendingRequests = new Set();
 
 // Sayfadaki Instagram Gönderilerini (Article) Tara
 function scanFeedDOM() {
@@ -159,6 +160,20 @@ function scanFeedDOM() {
             // Zaten verilmiş bir karar var mı kontrol et
             if (decisions.has(shortcode)) {
                 applyDecisionToArticle(article, decisions.get(shortcode));
+            } else if (!pendingRequests.has(shortcode)) {
+                pendingRequests.add(shortcode);
+                // Background script'in henüz JSON'unu yakalayamadığı (özellikle sayfa ilk açıldığında
+                // HTML ile gelen) postları DOM üzerinden okuyup analize gönder
+                const textContent = article.innerText || "";
+                const isVideo = !!article.querySelector("video");
+                
+                const authorMatch = textContent.match(/^[a-zA-Z0-9_.-]+/);
+                const author = authorMatch ? authorMatch[0] : "unknown";
+                
+                chrome.runtime.sendMessage({
+                    type: "ANALYZE_DOM_POST",
+                    post: { id: String(shortcode), caption: textContent.slice(0, 300), author: author, isVideo: isVideo }
+                });
             }
         }
     }
@@ -484,6 +499,13 @@ function maybeShowCatMascot(article, type) {
             bubble.style.transform = "translateY(0)";
             catImg.style.opacity = "1";
             catImg.style.transform = "scale(1)";
+            
+            // Kedi sesi çal 🐾
+            try {
+                const audio = new Audio(chrome.runtime.getURL("assets/meow.mp3"));
+                audio.volume = 0.5;
+                audio.play().catch(() => {}); // Eğer browser otomatik sesi engellerse hata vermesin
+            } catch (e) {}
         });
     });
 

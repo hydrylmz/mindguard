@@ -349,3 +349,15 @@ browser.webRequest.onBeforeRequest.addListener(
 );
 
 console.log("[NexGuard] webRequest listener kayıtlı, Instagram istekleri dinleniyor...");
+
+// --- İstemciden (Content Script) gelen özel analiz talepleri ---
+const pendingBackgroundRequests = new Set();
+browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "ANALYZE_DOM_POST") {
+    if (msg.post && msg.post.id && !scoreCache.has(msg.post.id) && !pendingBackgroundRequests.has(msg.post.id)) {
+      pendingBackgroundRequests.add(msg.post.id);
+      console.log(`[NexGuard] İlk açılış DOM postu yakalandı: ${msg.post.id}`);
+      analyzeBatch([msg.post]);
+    }
+  }
+});
