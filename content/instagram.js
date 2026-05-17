@@ -4,7 +4,23 @@ console.log("[NexGuard] Instagram content script yüklendi");
 
 let overlay = null;
 
+const preventScroll = (e) => {
+    e.preventDefault();
+};
+
+const preventKeys = (e) => {
+    // Arrow keys, Space, Page Up, Page Down, Home, End
+    if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
+        e.preventDefault();
+    }
+};
+
 function showAnalysisOverlay(count) {
+    // Scroll engelle (Event tabanlı, zıplamayı önler)
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('keydown', preventKeys, { passive: false });
+
     if (overlay) {
         const textSpan = document.getElementById("nx-overlay-text");
         if (textSpan) textSpan.innerHTML = `🛡️ NexGuard: <strong>${count}</strong> içerik analiz ediliyor...`;
@@ -88,6 +104,11 @@ function showAnalysisOverlay(count) {
 }
 
 function hideAnalysisOverlay() {
+    // Scroll kilidini kaldır
+    window.removeEventListener('wheel', preventScroll);
+    window.removeEventListener('touchmove', preventScroll);
+    window.removeEventListener('keydown', preventKeys);
+
     if (!overlay) return;
     const anim = overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 400,
@@ -139,6 +160,37 @@ function scanFeedDOM() {
             if (decisions.has(shortcode)) {
                 applyDecisionToArticle(article, decisions.get(shortcode));
             }
+        }
+    }
+
+    enforceBlurPersistency();
+}
+
+function enforceBlurPersistency() {
+    const articles = document.querySelectorAll("article");
+    for (const article of articles) {
+        if (article.dataset.nexguardUnblurred === "true") continue;
+        const shortcode = article.dataset.shortcode;
+        if (!shortcode) continue;
+        const decision = decisions.get(shortcode);
+        if (decision && decision.action === "blur") {
+             const mediaContainer = findMediaContainer(article);
+             if (!mediaContainer) continue;
+             const overlay = mediaContainer.querySelector(".nexguard-blur-overlay");
+             if (!overlay) {
+                 console.log("[NexGuard] Instagram DOM güncelledi, blur perdesi tekrar uygulanıyor...");
+                 article.dataset.nexguardFiltered = "false";
+                 applyDecisionToArticle(article, decision);
+             } else {
+                 const video = mediaContainer.querySelector("video");
+                 if (video && !video.paused) {
+                     video.pause();
+                     video.muted = true;
+                 }
+                 if (video && video.style.filter !== "blur(35px)") {
+                     video.style.filter = "blur(35px)";
+                 }
+             }
         }
     }
 }
@@ -254,6 +306,7 @@ function applyBlurOverlay(article, reason) {
     button.addEventListener("click", (e) => {
         e.stopPropagation();
         overlay.style.opacity = "0";
+        article.dataset.nexguardUnblurred = "true";
         if (imgOrVideo) {
             imgOrVideo.style.filter = "none";
             if (imgOrVideo.tagName === "VIDEO") {
