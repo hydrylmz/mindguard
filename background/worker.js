@@ -281,6 +281,20 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
       return;
     }
 
+    // İstatistik Güncelleyici
+    const updateStats = (action) => {
+      const today = new Date().toISOString().split("T")[0];
+      browser.storage.local.get(["nexguard_stats"]).then(res => {
+        let stats = res.nexguard_stats || { date: today, blurred: 0, warned: 0 };
+        if (stats.date !== today) {
+          stats = { date: today, blurred: 0, warned: 0 };
+        }
+        if (action === "blur") stats.blurred++;
+        else if (action === "warn") stats.warned++;
+        browser.storage.local.set({ nexguard_stats: stats });
+      }).catch(err => console.error("[NexGuard] Stat hatası:", err));
+    };
+
     // Sonuçları postlarla eşleştir
     for (const r of results) {
       const idx = (r.n || r.index || 0) - 1;
@@ -299,8 +313,9 @@ SADECE bir JSON array döndür, GİRİŞ veya AÇIKLAMA YAZMA. Çıktın tamamen
       const emoji = r.action === "blur" ? "🔴" : r.action === "warn" ? "🟡" : "🟢";
       console.log(`[NexGuard] ${emoji} @${post.author} | skor:${r.score} | aksiyon:${r.action} | sebep:"${r.reason}"`);
 
-      // Blur/warn ise content script'e bildir
+      // Blur/warn ise content script'e bildir ve stat güncelle
       if (r.action !== "pass") {
+        updateStats(r.action);
         notifyTabs({
           type: "POST_DECISION",
           postId: post.id,

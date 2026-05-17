@@ -141,6 +141,7 @@ function hideAnalysisOverlay() {
 const decisions = new Map(); // shortcode -> {action, reason, score}
 const processedArticles = new Set();
 const pendingRequests = new Set();
+let sessionScrolledPosts = 0;
 
 // Sayfadaki Instagram Gönderilerini (Article) Tara
 function scanFeedDOM() {
@@ -175,6 +176,12 @@ function scanFeedDOM() {
                 applyDecisionToArticle(article, decisions.get(shortcode));
             } else if (!pendingRequests.has(shortcode)) {
                 pendingRequests.add(shortcode);
+                sessionScrolledPosts++;
+                
+                if (sessionScrolledPosts % 30 === 0) {
+                    maybeShowCatMascot(article, "doomscroll");
+                }
+
                 // Background script'in henüz JSON'unu yakalayamadığı (özellikle sayfa ilk açıldığında
                 // HTML ile gelen) postları DOM üzerinden okuyup analize gönder
                 const textContent = article.innerText || "";
@@ -393,8 +400,8 @@ function applyWarningBanner(article, reason) {
 
 // ─── 🐱 KEDİ MASKOTU (NexGuard) ───
 function maybeShowCatMascot(article, type) {
-    // %50 ihtimalle çıksın (MVP için)
-    if (Math.random() > 0.5) return;
+    // %50 ihtimalle çıksın (Doomscroll ve pozitif mesajlar %100 çıkar)
+    if (type !== "doomscroll" && type !== "positive" && Math.random() > 0.5) return;
 
     const mediaContainer = findMediaContainer(article);
     if (!mediaContainer) return;
@@ -460,6 +467,8 @@ function maybeShowCatMascot(article, type) {
     // İçerik ayarla
     if (type === "blur") {
         bubble.innerHTML = closeBtnHtml + "Tercihlerine bağlı olarak bu videoyu kapattık, açmak istersen açabilirsin ama dikkatli ol! <br><br><em>meow~~</em> 🐾";
+    } else if (type === "doomscroll") {
+        bubble.innerHTML = closeBtnHtml + "Çok fazla aşağı kaydırdın, biraz durup su içmeye veya nefes almaya ne dersin? <br><br><em>meow~~</em> 🐾💧";
     } else if (type === "warn") {
         bubble.innerHTML = closeBtnHtml + `
       <div style="margin-bottom: 8px;">Bu içerik seni nasıl hissettirdi?</div>

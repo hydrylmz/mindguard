@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Kurulum Durumunu Kontrol Et
-  storage.get(["isOnboarded", "userProfile", "filters"], (data) => {
+  storage.get(["isOnboarded", "userProfile", "filters", "nexguard_stats"], (data) => {
     if (!data.isOnboarded) {
       // Kurulmamış: Onboarding'e yönlendir
       onboardingView.style.display = "block";
@@ -36,6 +36,19 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const triggers = profile.triggers || [];
       profileTriggers.textContent = `Hassasiyetler: ${triggers.join(", ") || "Yok"}`;
+
+      // İstatistikleri Doldur
+      const today = new Date().toISOString().split("T")[0];
+      const stats = data.nexguard_stats || { date: today, blurred: 0, warned: 0 };
+      const statBlurred = document.getElementById("stat-blurred");
+      const statWarned = document.getElementById("stat-warned");
+      if (stats.date === today) {
+        if (statBlurred) statBlurred.textContent = stats.blurred || 0;
+        if (statWarned) statWarned.textContent = stats.warned || 0;
+      } else {
+        if (statBlurred) statBlurred.textContent = 0;
+        if (statWarned) statWarned.textContent = 0;
+      }
 
       // Switch durumlarını yükle
       const filters = data.filters || {};

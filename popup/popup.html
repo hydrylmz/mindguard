@@ -216,6 +216,37 @@
       border-color: rgba(255,255,255,0.3);
       color: #fff;
     }
+
+    /* Stats Dashboard */
+    .stats-card {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-item {
+      flex: 1;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-value {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .stat-value.blur { color: #ef4444; }
+    .stat-value.warn { color: #eab308; }
+    
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 <body>
@@ -242,6 +273,18 @@
       </div>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;" id="profile-triggers">
         Tetikleyiciler: Yükleniyor...
+      </div>
+    </div>
+
+    <!-- İstatistikler -->
+    <div class="stats-card">
+      <div class="stat-item" title="Bugün engellenen hassas gönderiler">
+        <span class="stat-value blur" id="stat-blurred">0</span>
+        <span class="stat-label">Gizlenen</span>
+      </div>
+      <div class="stat-item" title="Bugün sarı etiketle uyarılan gönderiler">
+        <span class="stat-value warn" id="stat-warned">0</span>
+        <span class="stat-label">Uyarılan</span>
       </div>
     </div>
 
