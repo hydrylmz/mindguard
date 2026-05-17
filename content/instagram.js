@@ -111,8 +111,6 @@ function showAnalysisOverlay(count) {
         duration: 400,
         easing: "ease-out"
     });
-    
-    playMeowSound();
 }
 
 function hideAnalysisOverlay() {
@@ -122,7 +120,6 @@ function hideAnalysisOverlay() {
     window.removeEventListener('keydown', preventKeys);
 
     if (!overlay) return;
-    playMeowSound();
     const anim = overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 400,
         easing: "ease-in"
@@ -142,6 +139,14 @@ const decisions = new Map(); // shortcode -> {action, reason, score}
 const processedArticles = new Set();
 const pendingRequests = new Set();
 let sessionScrolledPosts = 0;
+let isInitialLoad = true;
+
+// İlk açılıştan 8 saniye sonra DOM üzerinden post avlamayı bırak
+// (Çünkü artık ağ (network) üzerinden JSON paketleri akmaya başlamıştır)
+setTimeout(() => {
+    isInitialLoad = false;
+    console.log("[NexGuard] İlk açılış süresi doldu, DOM post avı kapatıldı.");
+}, 3000);
 
 // Sayfadaki Instagram Gönderilerini (Article) Tara
 function scanFeedDOM() {
@@ -177,23 +182,24 @@ function scanFeedDOM() {
             } else if (!pendingRequests.has(shortcode)) {
                 pendingRequests.add(shortcode);
                 sessionScrolledPosts++;
-                
+
                 if (sessionScrolledPosts % 30 === 0) {
                     maybeShowCatMascot(article, "doomscroll");
                 }
 
-                // Background script'in henüz JSON'unu yakalayamadığı (özellikle sayfa ilk açıldığında
-                // HTML ile gelen) postları DOM üzerinden okuyup analize gönder
-                const textContent = article.innerText || "";
-                const isVideo = !!article.querySelector("video");
-                
-                const authorMatch = textContent.match(/^[a-zA-Z0-9_.-]+/);
-                const author = authorMatch ? authorMatch[0] : "unknown";
-                
-                chrome.runtime.sendMessage({
-                    type: "ANALYZE_DOM_POST",
-                    post: { id: String(shortcode), caption: textContent.slice(0, 300), author: author, isVideo: isVideo }
-                });
+                // Sadece sayfa ilk açıldığında ağdan kaçan HTML tabanlı postları yakala
+                if (isInitialLoad) {
+                    const textContent = article.innerText || "";
+                    const isVideo = !!article.querySelector("video");
+
+                    const authorMatch = textContent.match(/^[a-zA-Z0-9_.-]+/);
+                    const author = authorMatch ? authorMatch[0] : "unknown";
+
+                    chrome.runtime.sendMessage({
+                        type: "ANALYZE_DOM_POST",
+                        post: { id: String(shortcode), caption: textContent.slice(0, 300), author: author, isVideo: isVideo }
+                    });
+                }
             }
         }
     }
@@ -209,23 +215,23 @@ function enforceBlurPersistency() {
         if (!shortcode) continue;
         const decision = decisions.get(shortcode);
         if (decision && decision.action === "blur") {
-             const mediaContainer = findMediaContainer(article);
-             if (!mediaContainer) continue;
-             const overlay = mediaContainer.querySelector(".nexguard-blur-overlay");
-             if (!overlay) {
-                 console.log("[NexGuard] Instagram DOM güncelledi, blur perdesi tekrar uygulanıyor...");
-                 article.dataset.nexguardFiltered = "false";
-                 applyDecisionToArticle(article, decision);
-             } else {
-                 const video = mediaContainer.querySelector("video");
-                 if (video && !video.paused) {
-                     video.pause();
-                     video.muted = true;
-                 }
-                 if (video && video.style.filter !== "blur(35px)") {
-                     video.style.filter = "blur(35px)";
-                 }
-             }
+            const mediaContainer = findMediaContainer(article);
+            if (!mediaContainer) continue;
+            const overlay = mediaContainer.querySelector(".nexguard-blur-overlay");
+            if (!overlay) {
+                console.log("[NexGuard] Instagram DOM güncelledi, blur perdesi tekrar uygulanıyor...");
+                article.dataset.nexguardFiltered = "false";
+                applyDecisionToArticle(article, decision);
+            } else {
+                const video = mediaContainer.querySelector("video");
+                if (video && !video.paused) {
+                    video.pause();
+                    video.muted = true;
+                }
+                if (video && video.style.filter !== "blur(35px)") {
+                    video.style.filter = "blur(35px)";
+                }
+            }
         }
     }
 }
@@ -526,7 +532,7 @@ function maybeShowCatMascot(article, type) {
             bubble.style.transform = "translateY(0)";
             catImg.style.opacity = "1";
             catImg.style.transform = "scale(1)";
-            
+
             // Kedi sesi çal 🐾
             playMeowSound();
         });
