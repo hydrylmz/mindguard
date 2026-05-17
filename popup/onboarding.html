@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindGuard Kurulumu</title>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(20, 25, 45, 0.65);
+      --border-color: rgba(99, 102, 241, 0.15);
+      --border-hover: rgba(99, 102, 241, 0.4);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #d946ef;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Arka Plan Glow Blobları */
+    .blob {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: 1;
+      opacity: 0.35;
+    }
+    .blob-1 {
+      background: var(--primary);
+      top: -100px;
+      left: -100px;
+      animation: pulseBlob 8s infinite alternate;
+    }
+    .blob-2 {
+      background: var(--accent);
+      bottom: -100px;
+      right: -100px;
+      animation: pulseBlob 10s infinite alternate-reverse;
+    }
+
+    @keyframes pulseBlob {
+      0% { transform: scale(0.9) translate(0, 0); }
+      100% { transform: scale(1.1) translate(50px, 50px); }
+    }
+
+    /* Container */
+    .onboarding-container {
+      position: relative;
+      z-index: 10;
+      width: 580px;
+      max-width: 90vw;
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      box-sizing: border-box;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Adımlar */
+    .step {
+      display: none;
+      animation: slideIn 0.5s ease forwards;
+    }
+    .step.active {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* İlerleme Çubuğu */
+    .progress-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 30px;
+    }
+    .progress-dot {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .progress-dot.active {
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    /* Tipografi */
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p.subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0 0 25px 0;
+      line-height: 1.5;
+    }
+
+    /* Form Elemanları */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input[type="number"] {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.3s;
+    }
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(99,102,241,0.2);
+    }
+
+    /* Radio / Grid Seçenekler */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .option-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.25s ease;
+      user-select: none;
+    }
+    .option-card:hover {
+      border-color: var(--border-hover);
+      background: rgba(255,255,255,0.05);
+    }
+    .option-card.selected {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.12);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+    }
+    .option-card input {
+      display: none;
+    }
+    .emoji-icon {
+      font-size: 20px;
+    }
+    .option-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Butonlar */
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+      z-index: 12;
+    }
+    .btn {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover {
+      color: #fff;
+      border-color: var(--border-hover);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Pulsing Shield (Welcome Step) */
+    .shield-logo {
+      width: 90px;
+      height: 90px;
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 30px auto;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+      animation: pulseShield 2.5s infinite ease-in-out;
+    }
+    @keyframes pulseShield {
+      0% { transform: scale(0.96); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+      50% { transform: scale(1.04); box-shadow: 0 0 45px rgba(99, 102, 241, 0.6); }
+      100% { transform: scale(0.96); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="onboarding-container">
+    <div>
+      <!-- İlerleme Göstergesi -->
+      <div class="progress-bar">
+        <div class="progress-dot active" data-step="1"></div>
+        <div class="progress-dot" data-step="2"></div>
+        <div class="progress-dot" data-step="3"></div>
+        <div class="progress-dot" data-step="4"></div>
+        <div class="progress-dot" data-step="5"></div>
+      </div>
+
+      <!-- Adım 1: Hoşgeldiniz -->
+      <div class="step active" id="step-1">
+        <div class="shield-logo">
+          <img src="../assets/icon-48.png" style="width: 50px; height: 50px; border-radius: 8px;" alt="MindGuard Logo">
+        </div>
+        <h2 style="text-align: center;">Zihinsel Sınırlarını Koru</h2>
+        <p class="subtitle" style="text-align: center; font-size: 15px; max-width: 440px; margin: 0 auto;">
+          Sosyal medyadaki tetikleyici, moral bozucu veya kaygı uyandıran gönderilerden bıktın mı? MindGuard, Gemini AI desteğiyle akışını kişisel hassasiyetlerine göre filtreler.
+        </p>
+      </div>
+
+      <!-- Adım 2: Yaş ve Zamirler -->
+      <div class="step" id="step-2">
+        <h2>Kendinden Bahset</h2>
+        <p class="subtitle">İçerik filtreleme algoritmamızı sana göre özelleştirmemize yardımcı ol.</p>
+        
+        <div class="form-group">
+          <label for="user-age">Yaşın</label>
+          <input type="number" id="user-age" min="10" max="120" placeholder="Örn: 24">
+        </div>
+
+        <div class="form-group">
+          <label>Zamirlerin (Pronouns)</label>
+          <div class="options-grid" id="pronoun-options">
+            <div class="option-card" data-val="She/Her">
+              <span class="emoji-icon">👩</span>
+              <span class="option-label">She / Her</span>
+            </div>
+            <div class="option-card" data-val="He/Him">
+              <span class="emoji-icon">👨</span>
+              <span class="option-label">He / Him</span>
+            </div>
+            <div class="option-card" data-val="They/Them">
+              <span class="emoji-icon">🧑‍🤝‍🧑</span>
+              <span class="option-label">They / Them</span>
+            </div>
+            <div class="option-card" data-val="Belirtmek İstemiyorum">
+              <span class="emoji-icon">🛡️</span>
+              <span class="option-label">Belirtmek İstemiyorum</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adım 3: Psikolojik Hassasiyetler -->
+      <div class="step" id="step-3">
+        <h2>Tetikleyici Faktörler</h2>
+        <p class="subtitle">Varsa, seni duygusal veya psikolojik açıdan zorlayan durumları seç (Çoklu seçim yapabilirsin).</p>
+        
+        <div class="options-grid" id="trigger-options" style="grid-template-columns: 1fr 1fr;">
+          <div class="option-card" data-val="Kaygı / Anksiyete">
+            <span class="emoji-icon">🌀</span>
+            <span class="option-label">Kaygı (Anksiyete)</span>
+          </div>
+          <div class="option-card" data-val="Yeme Bozukluğu">
+            <span class="emoji-icon">🥗</span>
+            <span class="option-label">Yeme Bozukluğu</span>
+          </div>
+          <div class="option-card" data-val="Depresyon">
+            <span class="emoji-icon">🌧️</span>
+            <span class="option-label">Depresyon</span>
+          </div>
+          <div class="option-card" data-val="Panik Atak / Fobi">
+            <span class="emoji-icon">⚡</span>
+            <span class="option-label">Panik Atak / Fobiler</span>
+          </div>
+          <div class="option-card" data-val="TSSB / Travma">
+            <span class="emoji-icon">🧠</span>
+            <span class="option-label">TSSB / Travmalar</span>
+          </div>
+          <div class="option-card" data-val="Hiçbiri" id="no-trigger-card">
+            <span class="emoji-icon">🌈</span>
+            <span class="option-label">Hassasiyetim Yok</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adım 4: Filtrelenecek Konular -->
+      <div class="step" id="step-4">
+        <h2>Neler Filtrelensin?</h2>
+        <p class="subtitle">Instagram akışında görmek istemediğin konu başlıklarını seç.</p>
+        
+        <div class="options-grid" id="filter-options" style="grid-template-columns: 1fr;">
+          <div class="option-card" data-val="bodyImage">
+            <span class="emoji-icon">📏</span>
+            <div>
+              <span class="option-label" style="display:block; font-weight:600;">Vücut Algısı & Diyet</span>
+              <span style="font-size:12px; color:var(--text-muted);">Zayıflama çayları, ağır diyetler, ideal beden dayatmaları</span>
+            </div>
+          </div>
+          <div class="option-card" data-val="politics">
+            <span class="emoji-icon">🗳️</span>
+            <div>
+              <span class="option-label" style="display:block; font-weight:600;">Siyaset & Nefret Söylemi</span>
+              <span style="font-size:12px; color:var(--text-muted);">Politik gerilimler, kavgalar ve kutuplaştırıcı nefret söylemleri</span>
+            </div>
+          </div>
+          <div class="option-card" data-val="violence">
+            <span class="emoji-icon">💥</span>
+            <div>
+              <span class="option-label" style="display:block; font-weight:600;">Şiddet & Korku</span>
+              <span style="font-size:12px; color:var(--text-muted);">Kazalar, kavgalar, ürkütücü görseller ve korku içeriği</span>
+            </div>
+          </div>
+          <div class="option-card" data-val="success">
+            <span class="emoji-icon">💎</span>
+            <div>
+              <span class="option-label" style="display:block; font-weight:600;">Başarı & Servet Karşılaştırması</span>
+              <span style="font-size:12px; color:var(--text-muted);">Gösterişli zenginlikler, "başarı" baskısı yaratan motivasyon videoları</span>
+            </div>
+          </div>
+          <div class="option-card" data-val="anxietyNews">
+            <span class="emoji-icon">🚨</span>
+            <div>
+              <span class="option-label" style="display:block; font-weight:600;">Kaygı Uyandıran Felaket Haberleri</span>
+              <span style="font-size:12px; color:var(--text-muted);">Savaşlar, salgınlar, ekonomik kriz ve moral bozan felaket haberleri</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adım 5: Kurulum Tamamlandı -->
+      <div class="step" id="step-5">
+        <div class="shield-logo" style="background: rgba(168, 85, 247, 0.15); box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);">
+          <span style="font-size: 40px; animation: bounceEmoji 1s infinite alternate;">🎉</span>
+        </div>
+        <h2 style="text-align: center;">MindGuard Zırhın Hazır!</h2>
+        <p class="subtitle" style="text-align: center; font-size: 15px; max-width: 440px; margin: 0 auto; line-height: 1.6;">
+          Seçimlerin kaydedildi. Yapay zeka filtren artık senin zihinsel yapına, yaşına ve hassasiyetlerine uygun şekilde çalışacak. Instagram'a girip korumanın tadını çıkarabilirsin!
+        </p>
+      </div>
+    </div>
+
+    <!-- Buton Kontrolleri -->
+    <div class="button-row">
+      <button class="btn btn-secondary" id="btn-prev" disabled>Geri</button>
+      <button class="btn btn-primary" id="btn-next">Devam Et</button>
+    </div>
+  </div>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>

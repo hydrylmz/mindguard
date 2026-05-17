@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>MindGuard Dashboard</title>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(20, 25, 45, 0.7);
+      --border-color: rgba(99, 102, 241, 0.15);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+    }
+
+    body {
+      width: 320px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .logo-img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Kurulum Bekleniyor Durumu */
+    #onboarding-view {
+      display: none;
+      text-align: center;
+      padding: 20px 10px;
+    }
+
+    #onboarding-view h2 {
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    #onboarding-view p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    /* Ana Dashboard Durumu */
+    #dashboard-view {
+      display: none;
+    }
+
+    .profile-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .profile-card-title {
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .profile-info {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-main);
+    }
+
+    .filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .filter-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 12px;
+      transition: all 0.3s;
+    }
+
+    .filter-item:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .filter-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .filter-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .filter-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* IOS Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255,255,255,0.1);
+      transition: .3s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Butonlar */
+    .btn {
+      width: 100%;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .btn-outline:hover {
+      border-color: rgba(255,255,255,0.3);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="../assets/icon-48.png" class="logo-img" alt="MindGuard Logo">
+    <h1>MindGuard</h1>
+  </div>
+
+  <!-- Kurulum Görünümü -->
+  <div id="onboarding-view">
+    <span style="font-size: 40px;">🛡️</span>
+    <h2>MindGuard Kurulumu Gerekli</h2>
+    <p>Zihinsel koruma kalkanını başlatmak için öncelikle kurulumu tamamlamalısın.</p>
+    <button class="btn btn-primary" id="btn-start-onboarding">Kuruluma Başla 🚀</button>
+  </div>
+
+  <!-- Dashboard Görünümü -->
+  <div id="dashboard-view">
+    <div class="profile-card">
+      <div class="profile-card-title">Kişisel Zırh Profili</div>
+      <div class="profile-info">
+        <span id="profile-pronoun">Zamirler: Belirtilmemiş</span>
+        <span id="profile-age">Yaş: -</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;" id="profile-triggers">
+        Tetikleyiciler: Yükleniyor...
+      </div>
+    </div>
+
+    <div class="filter-list">
+      <div class="filter-item">
+        <div class="filter-meta">
+          <span class="filter-name">📏 Vücut Algısı & Diyet</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="filter-bodyImage">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="filter-item">
+        <div class="filter-meta">
+          <span class="filter-name">🗳️ Siyaset & Nefret</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="filter-politics">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="filter-item">
+        <div class="filter-meta">
+          <span class="filter-name">💥 Şiddet & Korku</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="filter-violence">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="filter-item">
+        <div class="filter-meta">
+          <span class="filter-name">💎 Başarı & Servet</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="filter-success">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="filter-item">
+        <div class="filter-meta">
+          <span class="filter-name">🚨 Felaket Haberleri</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="filter-anxietyNews">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-outline" id="btn-re-onboard">Profili Yeniden Düzenle</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

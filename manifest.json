@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "MindGuard",
+  "version": "1.0",
+  "description": "Instagram reels ve gönderilerini senin için filtreler",
+  "icons": { "48": "assets/icon-48.png" },
+
+  "background": {
+    "scripts": ["config.js", "background/worker.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.instagram.com/*"],
+      "js": ["config.js", "content/widget.js", "content/instagram.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "webRequestFilterResponse",
+    "storage",
+    "tabs"
+  ],
+
+  "host_permissions": [
+    "*://*.instagram.com/*",
+    "*://i.instagram.com/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/icon-48.png"],
+      "matches": ["*://*.instagram.com/*"]
+    }
+  ]
+}
